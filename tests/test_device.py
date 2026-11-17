@@ -29,6 +29,11 @@ async def test_decodes_a_captured_rb5(device: AtreaRD5) -> None:
     assert config.cooling is Cooling.DIRECT
     assert config.indoor_temperature_source is IndoorTemperatureSource.BMS
     assert config.circulation_damper is True
+    assert config.automatic_ventilation_interval == 15
+    assert config.supply_fan_correction == 0
+    assert device.r5_flows is not None
+    assert device.r5_flows.circulation_norm == 420
+    assert device.r5_flows.ventilation_max == 180
 
     control = device.control
     assert control.mode is OperatingMode.CIRCULATION_WITH_VENTILATION
@@ -144,3 +149,12 @@ async def test_raw_dump_leaves_the_serial_number_out(device: AtreaRD5) -> None:
     raw = await device.async_read_raw()
     assert 12300 not in raw["holding"]
     assert raw["input"][20] == 2
+
+
+async def test_unit_that_is_not_r5_has_no_level_flows(unit: MockModbusUnit) -> None:
+    unit.holding[10510] = 1
+    device = AtreaRD5(unit)
+    await device.async_update()
+    assert not device.is_r5
+    assert device.r5_flows is None
+    assert device.r5_power is None

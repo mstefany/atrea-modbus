@@ -82,6 +82,26 @@ manufacturer prescribes. The change then holds until the next interval of the
 weekly program. `control.async_follow_schedule()` hands control to the weekly
 program or takes it back.
 
+## How the modes behave
+
+Some modes look broken over Modbus when they are only waiting. The help texts
+of the unit's own web interface, and measurements on a DUPLEX RB5, say this:
+
+- **Automatic**: the unit ventilates for `automatic_ventilation_interval`
+  minutes of every hour and stands still for the rest, unless an input or a
+  heating or cooling demand starts it.
+- **Night precooling**: the unit stands still between test runs. After
+  `night_cooling_test_interval` it runs the fans for five minutes to measure
+  the real outdoor and indoor air temperature, and cools only if that pays.
+- **Unbalanced**: the supply fan runs `supply_fan_correction` percent faster
+  or slower than the extract fan. At 0 the mode equals ventilation.
+- **Overpressure**: the supply fan runs at the power level and the extract fan
+  is off.
+- **R_5 power levels**: a level stands for the air flows in `r5_flows`. Given
+  a level of another family, the unit runs the matching level of the family
+  the mode takes. `async_set_mode()` and `async_set_power()` write that
+  matching level, so the request says what the unit will do.
+
 ## Query a unit
 
 ```bash
@@ -95,10 +115,9 @@ report becomes a test. The dump leaves the production number of the unit out.
 ## Known gaps
 
 - Power levels of R_5 units were measured on a DUPLEX RB5 for ventilation,
-  circulation, circulation with ventilation, unbalanced and overpressure. The
-  unit runs a level of another family as the matching level of its own, and the
-  library writes that matching level. Automatic and night precooling did not
-  run during the measurement, so their levels are an assumption.
+  circulation, circulation with ventilation, unbalanced and overpressure.
+  Automatic and night precooling stood still during the measurement, so their
+  levels are an assumption.
 - The alarm names from D11156 on are paired with their addresses by their
   order in the source table.
 - The zone values are untested: the test unit has one zone.
