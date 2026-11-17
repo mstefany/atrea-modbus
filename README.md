@@ -102,8 +102,14 @@ of the unit's own web interface, and measurements on a DUPLEX RB5, say this:
   is off.
 - **R_5 power levels**: a level stands for the air flows in `r5_flows`. Given
   a level of another family, the unit runs the matching level of the family
-  the mode takes. `async_set_mode()` and `async_set_power()` write that
-  matching level, so the request says what the unit will do.
+  the mode takes: circulation levels for circulation, combined levels for
+  automatic and circulation with ventilation, ventilation levels for the
+  rest. The unit's web interface offers the same sets. `async_set_mode()` and
+  `async_set_power()` write that matching level, so the request says what the
+  unit will do.
+- **Available modes**: register I12004 is a bit mask of the modes the unit
+  lets a user request. `available_modes` combines it with the conditions of
+  the source document.
 
 ## Query a unit
 
@@ -117,10 +123,14 @@ report becomes a test. The dump leaves the production number of the unit out.
 
 ## Known gaps
 
-- Power levels of R_5 units were measured on a DUPLEX RB5 for ventilation,
-  circulation, circulation with ventilation, unbalanced and overpressure.
-  Automatic and night precooling stood still during the measurement, so their
-  levels are an assumption.
+- The power levels 10 to 38 are those of an R_5 unit set up for two-zone
+  operation, measured on a DUPLEX RB5. The web interface of the unit gives an
+  R_5 unit without two-zone operation the values 1 to 9 in the automatic mode
+  and 1 to 3 in the other modes. The library accepts these values for such a
+  unit, but nobody tested them.
+- Night precooling is offered only in the non-heating season, as the source
+  document says. The unit itself reports the mode as accepted in the heating
+  season too; what it does then is untested.
 - The alarm names from D11156 on are paired with their addresses by their
   order in the source table.
 - The zone values are untested: the test unit has one zone.
@@ -135,6 +145,9 @@ The register tables are Atrea documents and are not part of this repository.
   RD5 control system", Atrea, 2021: the full register table.
 - "Modbus communication - RD5, aMotion", Atrea, version 04, 2025, from the
   documents section of atrea.eu: the registers for normal control.
+- The web interface the unit serves (`scripts.js`, `lang/userCtrl.xml` and the
+  help texts): which power levels each mode takes, which modes the unit
+  accepts, and what the service parameters mean.
 
 ## Develop
 

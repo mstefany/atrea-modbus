@@ -107,7 +107,7 @@ async def test_poll_is_a_handful_of_reads(unit: MockModbusUnit) -> None:
     unit.read_events.clear()
     await device.async_update()
     assert len(unit.read_events) < setup_and_poll
-    assert len(unit.read_events) <= 12
+    assert len(unit.read_events) <= 13
     assert all(event.count <= 125 for event in unit.read_events)
 
 
@@ -158,3 +158,46 @@ async def test_unit_that_is_not_r5_has_no_level_flows(unit: MockModbusUnit) -> N
     assert not device.is_r5
     assert device.r5_flows is None
     assert device.r5_power is None
+
+
+async def test_unit_can_take_modes_away(device: AtreaRD5, unit: MockModbusUnit) -> None:
+    # Bits 0 to 2 only: off, automatic and ventilation.
+    unit.input[12004] = 0b0000_0111
+    await device.async_update()
+    assert device.available_modes == (
+        OperatingMode.OFF,
+        OperatingMode.AUTOMATIC,
+        OperatingMode.VENTILATION,
+    )
+
+
+async def test_unit_without_mode_mask_follows_the_table(unit: MockModbusUnit) -> None:
+    unit.fail_read(12004, IllegalDataAddressError(), register_type="input")
+    device = AtreaRD5(unit)
+    await device.async_update()
+    assert device.mode_limits is None
+    assert OperatingMode.CIRCULATION in device.available_modes
+
+
+async def test_circulation_modes_need_the_damper(unit: MockModbusUnit) -> None:
+    unit.holding[11700] = 0
+    device = AtreaRD5(unit)
+    await device.async_update()
+    assert OperatingMode.CIRCULATION not in device.available_modes
+    assert OperatingMode.CIRCULATION_WITH_VENTILATION not in device.available_modes
+
+
+async def test_r5_unit_without_two_zones_takes_plain_levels(
+    unit: MockModbusUnit,
+) -> None:
+    unit.coil[10509] = False
+    unit.holding[10715] = 2
+    device = AtreaRD5(unit)
+    await device.async_update()
+    assert device.is_r5
+    assert not device.has_power_levels
+    assert device.r5_power is None
+    with pytest.raises(ValueError):
+        await device.async_set_power(11)
+    await device.async_set_power(3)
+    assert unit.holding[10708] == 3
