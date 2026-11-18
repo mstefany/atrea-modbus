@@ -103,10 +103,16 @@ of the unit's own web interface, and measurements on a DUPLEX RB5, say this:
   requested ventilation level (about 98 m³/h supply, 120 m³/h extract at
   Norm) for the 12 minutes of the test, and the supply air fell from 22.1 to
   18.4 °C. The requested flow registers read 0 m³/h supply in this mode.
-- **Any mode change**: the fans stop for about 90 seconds before the new
-  mode runs. A season change takes effect within 15 seconds.
+- **Mode changes**: from circulation with ventilation to night precooling,
+  and back, the fans stopped for about 90 seconds before the new mode ran.
+  From ventilation to unbalanced they did not stop. A season change takes
+  effect within 15 seconds.
 - **Unbalanced**: the supply fan runs `supply_fan_correction` percent faster
-  or slower than the extract fan. At 0 the mode equals ventilation.
+  or slower than the extract fan (-80 to +80; service parameter 3.2.3). At 0
+  the mode equals ventilation. Measured on a DUPLEX RB5 at ventilation Norm:
+  supply/extract 101/120 m³/h at 0, 126/120 at +20, 70/120 at -20. A new
+  correction takes effect within 30 seconds, without a mode change. Service
+  parameter 3.2.14 applies the correction to every ventilation mode.
 - **Overpressure**: the supply fan runs at the power level and the extract fan
   is off.
 - **R_5 power levels**: a level stands for the air flows in `r5_flows`. Given
