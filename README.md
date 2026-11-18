@@ -90,12 +90,18 @@ of the unit's own web interface, and measurements on a DUPLEX RB5, say this:
 - **Automatic**: the unit ventilates for `automatic_ventilation_interval`
   minutes of every hour and stands still for the rest, unless an input or a
   heating or cooling demand starts it.
-- **Night precooling**: only in the non-heating season. The unit stands
-  still, and ventilates only while the room is warmer than the requested
-  temperature and the outdoor air is cooler than the room. Between test runs
-  it cannot know the real air temperatures: every
+- **Night precooling**: only in the non-heating season. The unit ventilates
+  only while the room is warmer than the requested temperature and the
+  outdoor air is cooler than the room; otherwise it stands still, and every
   `night_cooling_test_interval` minutes it runs the fans for five minutes to
-  measure them.
+  measure the real air temperatures. Measured on a DUPLEX RB5 with the room
+  at 22.2 °C, 18 °C requested and 12 °C outdoors: after the switch the fans
+  stood still for about 90 seconds, then ran without a break at the
+  requested ventilation level (about 98 m³/h supply, 120 m³/h extract at
+  Norm) for the 12 minutes of the test, and the supply air fell from 22.1 to
+  18.4 °C. The requested flow registers read 0 m³/h supply in this mode.
+- **Any mode change**: the fans stop for about 90 seconds before the new
+  mode runs. A season change takes effect within 15 seconds.
 - **Unbalanced**: the supply fan runs `supply_fan_correction` percent faster
   or slower than the extract fan. At 0 the mode equals ventilation.
 - **Overpressure**: the supply fan runs at the power level and the extract fan
