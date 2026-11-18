@@ -195,6 +195,7 @@ async def test_temperature_at_the_limits_is_written(
         (OperatingMode.CIRCULATION_WITH_VENTILATION, 34, 34),
         (OperatingMode.CIRCULATION_WITH_VENTILATION, 11, 31),
         (OperatingMode.CIRCULATION_WITH_VENTILATION, 21, 33),
+        (OperatingMode.NIGHT_PRECOOLING, 11, 11),
     ],
 )
 def test_power_translation_matches_the_unit(
@@ -213,3 +214,61 @@ async def test_power_of_another_family_is_translated_on_write(
     # The unit is in circulation with ventilation.
     await device.async_set_power(R5Power.VENTILATION_MAX)
     assert writes == [("holding", 10708, [32])]
+
+
+async def _non_heating(device: AtreaRD5, unit: MockModbusUnit) -> None:
+    unit.input[11401] = 1
+    await device.async_update()
+
+
+async def test_night_precooling_never_sees_a_combined_level(
+    device: AtreaRD5, unit: MockModbusUnit, writes: Writes
+) -> None:
+    # A combined level in night precooling stops the fans of a real unit, so
+    # the ventilation level goes in before the mode.
+    await _non_heating(device, unit)
+    await device.async_set_mode(OperatingMode.NIGHT_PRECOOLING)
+    assert writes == [("holding", 10708, [12]), ("holding", 10709, [5])]
+
+
+async def test_leaving_night_precooling_writes_the_mode_first(
+    device: AtreaRD5, unit: MockModbusUnit, writes: Writes
+) -> None:
+    await _non_heating(device, unit)
+    await device.async_set_mode(OperatingMode.NIGHT_PRECOOLING)
+    writes.clear()
+    await device.async_set_mode(OperatingMode.CIRCULATION_WITH_VENTILATION)
+    assert writes == [("holding", 10709, [3]), ("holding", 10708, [32])]
+
+
+async def test_power_follows_a_mode_changed_on_the_panel(
+    device: AtreaRD5, unit: MockModbusUnit, writes: Writes
+) -> None:
+    await _non_heating(device, unit)
+    # The panel switches to night precooling after the last poll.
+    unit.holding[10709] = unit.holding[10705] = unit.holding[10715] = 5
+    await device.async_set_power(R5Power.NORM_NORM)
+    assert writes == [("holding", 10708, [11])]
+
+
+async def test_mode_already_set_by_hand_is_not_written_again(
+    device: AtreaRD5, writes: Writes
+) -> None:
+    await device.async_set_mode(OperatingMode.CIRCULATION_WITH_VENTILATION)
+    await device.async_set_power(R5Power.NORM_MAX)
+    assert writes == []
+
+
+async def test_same_mode_under_the_weekly_program_becomes_temporary(
+    device: AtreaRD5, unit: MockModbusUnit, writes: Writes
+) -> None:
+    unit.holding[10701] = int(ControlSource.SCHEDULE)
+    await device.async_set_mode(OperatingMode.CIRCULATION_WITH_VENTILATION)
+    assert writes == [("holding", 10709, [3]), ("holding", 10701, [2])]
+
+
+def test_every_public_name_imports() -> None:
+    import atrea_modbus.rd5 as rd5
+
+    for name in rd5.__all__:
+        assert hasattr(rd5, name), name

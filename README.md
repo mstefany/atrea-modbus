@@ -44,8 +44,11 @@ async def main() -> None:
         print("Outdoor air:", device.sensors.outdoor_air)
         print("Requested mode:", device.control.requested_mode)
 
-        await device.control.async_set_mode(OperatingMode.VENTILATION)
-        await device.control.async_set_power(R5Power.VENTILATION_NORM)
+        # Use the device methods for mode and power: they check what the unit
+        # accepts and keep the power in the family the mode takes. The
+        # methods of device.control write raw values without these checks.
+        await device.async_set_mode(OperatingMode.VENTILATION)
+        await device.async_set_power(R5Power.VENTILATION_NORM)
         await device.control.async_set_temperature(22.5)
     finally:
         await connection.close()
