@@ -8,6 +8,9 @@ The library is built on
 It takes a `ModbusUnit` and does not open a connection itself. It does not
 depend on Home Assistant.
 
+This is a community project. It is not made, endorsed or supported by
+ATREA s.r.o. See [Trademarks](#trademarks).
+
 Atrea units with the newer **aMotion** control use a different register map.
 This library does not support them yet. They would get their own sub-package next to `atrea_modbus.rd5`.
 
@@ -171,3 +174,12 @@ uv sync
 uv run pytest
 uv run ruff format --check . && uv run ruff check . && uv run mypy
 ```
+
+## Trademarks
+
+Atrea, DUPLEX, RD5, aMotion and the logo of Atrea are trademarks or
+registered trademarks of ATREA s.r.o. This project uses the names only to say
+which units it works with. It is a community project, and it is not
+affiliated with, endorsed by or supported by ATREA s.r.o. Ask for help with
+this library in the issues of this repository, not at Atrea. All other
+trademarks belong to their owners.
